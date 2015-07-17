@@ -98,5 +98,6 @@ columns <- function(env=parent.frame(),silent=FALSE,pretty=TRUE,stats=FALSE)
             info[irows, RATIO_NA := ifelse(COUNT_NA==0L, 0, COUNT_NA / COUNT)] # ifelse to handle 0 nrow dt which would produce NaN
         }
     }
+    set2keyv(info,NULL)
     if(silent) invisible(info) else info[]
 }
