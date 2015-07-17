@@ -95,7 +95,7 @@ columns <- function(env=parent.frame(),silent=FALSE,pretty=TRUE,stats=FALSE)
             set(info,irows,"COUNT",rep(nrow(DT),length(irows)))
             set(info,irows,"COUNT_UNQ",sapply(names(DT), function(colname) DT[,tryUniqueN(eval(as.name(colname)))]))
             set(info,irows,"COUNT_NA",sapply(names(DT), function(colname) DT[is.na(eval(as.name(colname))), .N]))
-            info[irows, RATIO_NA := ifelse(COUNT_NA==0L, 0L, COUNT_NA / COUNT)] # ifelse to handle 0 nrow dt which would produce NaN
+            info[irows, RATIO_NA := ifelse(COUNT_NA==0L, 0, COUNT_NA / COUNT)] # ifelse to handle 0 nrow dt which would produce NaN
         }
     }
     if(silent) invisible(info) else info[]
