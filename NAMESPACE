@@ -129,7 +129,7 @@ S3method(split, IDate)
 S3method(unique, IDate)
 S3method(unique, ITime)
 
-
+export(as.macro)
 
 # [.factor
 # c.factor

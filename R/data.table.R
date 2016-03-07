@@ -399,6 +399,19 @@ chmatch2 <- function(x, table, nomatch=NA_integer_) {
         if (!missing(i) & is.data.table(ans)) setkey(ans,NULL)  # See test 304
         return(ans)
     }
+    # macros
+    if (getOption("datatable.macros", FALSE)) {
+        cl = match.call()
+        if ("i" %chin% names(cl) && is.call(cl[["i"]]) && identical(cl[["i"]][[1L]], as.symbol("~"))) {
+            if (!is.name(cl[["i"]][[2L]])) stop("prefix '~' should be used only with unquoted macro name", call.=FALSE)
+            macro = cl[["i"]][[2L]]
+            macro.char = deparse(macro, width.cutoff = 500L)[1L]
+            if (!exists(macro.char)) stop(sprintf("object '%s' not found", macro.char), call.=FALSE)
+            if (!inherits(eval(macro), "macro")) stop(sprintf("name provided after '~' prefix must be a name of 'macro' class object", macro.char), call.=FALSE)
+            dtq = as.call(c(as.name("["), cl[["x"]], eval(macro)))
+            return(eval.parent(dtq))
+        }
+    }
     if (!mult %chin% c("first","last","all")) stop("mult argument can only be 'first','last' or 'all'")
     if (length(roll)!=1L || is.na(roll)) stop("roll must be a single TRUE, FALSE, positive/negative integer/double including +Inf and -Inf or 'nearest'")
     if (is.character(roll)) {
