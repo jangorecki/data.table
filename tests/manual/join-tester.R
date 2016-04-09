@@ -1,5 +1,4 @@
-setwd("/home/jan/Projects/data.table-workspace/current")
-source("join-tester-funs.R")
+source("~/Projects/data.table/tests/manual/join-tester-funs.R")
 
 # demo single tests
 dt = data.table(id="x", 
