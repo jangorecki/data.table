@@ -21,6 +21,10 @@ join.sql.equal(dt, dt, which=FALSE, mult="first", on = c("id==id","a==a"), verbo
 join.sql.equal(dt, dt, which=FALSE, mult="last", on = c("id==id","a==a"), verbose=TRUE)
 join.sql.equal(dt, dt, which=FALSE, mult="all", on = c("id==id","a==a"), verbose=TRUE)
 
+# which=TRUE, mult="first" - not yet ready for non-equi joins! try equi join below
+# join.sql.equal(dt, dt, which=FALSE, mult="first", on = c("id==id","a>=a"), verbose=TRUE)
+join.sql.equal(dt, dt, which=TRUE, mult="first", on = c("id==id","a==a"), verbose=TRUE)
+
 # small batch explicitly defined tests
 on.v = list(
     c("id==id","a>=a","b>=b"),

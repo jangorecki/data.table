@@ -41,20 +41,33 @@ join.sql.equal = function(x, i, nomatch=NA_integer_, mult="all", which=TRUE, all
     o.on[o.on=="=="] = "=" # SQL uses `=`, not `==`
     x.on = sapply(subon[-1L], function(x) as.character(x[[2L]]))
     i.on = sapply(subon[-1L], function(x) as.character(x[[3L]]))
-    sql.sel = if (which) "x.row_id AS row_id" else {
-        paste(c(
+    sql.on = paste(sapply(seq_along(o.on), function(i) paste(paste0("x.", x.on[i]), o.on[i], paste0("i.",i.on[i]))), collapse = " AND ")
+    jn.type = if (is.na(nomatch)) "LEFT OUTER" else "INNER"
+    if (mult == "all") {
+        sql.sel = if (which) "x.row_id AS row_id" else {
+            paste(c(
+                sprintf("x.%s AS \"x.%s\"", names(x), names(x)),
+                sprintf("i.%s AS \"i.%s\"", names(i), names(i))
+            ), collapse=", ")
+        }
+        sql = sprintf("SELECT %s FROM i %s JOIN x ON %s", sql.sel, jn.type, sql.on) # swap `x` with `i` to emulate right outer join, not supported in sqlite
+       
+    } else {
+        sub.sql.sel = if (which) "x.row_id AS \"x.row_id\", i.row_id AS \"i.row_id\"" else paste(c(
             sprintf("x.%s AS \"x.%s\"", names(x), names(x)),
             sprintf("i.%s AS \"i.%s\"", names(i), names(i))
         ), collapse=", ")
-    }
-    sql.on = paste(sapply(seq_along(o.on), function(i) paste(paste0("x.", x.on[i]), o.on[i], paste0("i.",i.on[i]))), collapse = " AND ")
-    jn.type = if (is.na(nomatch)) "LEFT OUTER" else "INNER"
-    sql = sprintf("SELECT %s FROM i %s JOIN x ON %s", sql.sel, jn.type, sql.on) # swap `x` with `i` to emulate right outer join, not supported in sqlite
-    if (mult != "all") {
-        base_sql = sql
+        base_sql = sprintf("SELECT %s FROM i %s JOIN x ON %s", sub.sql.sel, jn.type, sql.on) # swap `x` with `i` to emulate right outer join, not supported in sqlite
+        sql.sel = if (which) "x.row_id AS row_id" else {
+            paste(c(
+                sprintf("x.%s AS \"x.%s\"", names(x), names(x)),
+                sprintf("i.%s AS \"i.%s\"", names(i), names(i))
+            ), collapse=", ")
+        }
         mult.fun = if (mult=="first") "MIN" else if (mult=="last") "MAX" else stop("'mult' argument accept only: all, first, last")
         mult_one = sprintf("SELECT \"i.row_id\", %s(\"x.row_id\") AS \"x.row_id\" FROM mult_all GROUP BY \"i.row_id\"", mult.fun)
-        mult_join = "SELECT mult_all.* FROM mult_all INNER JOIN mult_one ON mult_all.\"x.row_id\"==mult_one.\"x.row_id\" AND mult_all.\"i.row_id\"==mult_one.\"i.row_id\""
+        mult_join = sprintf("SELECT mult_all.%s FROM mult_all INNER JOIN mult_one ON mult_all.\"x.row_id\"==mult_one.\"x.row_id\" AND mult_all.\"i.row_id\"==mult_one.\"i.row_id\"",
+                            if (which) "\"x.row_id\" AS row_id" else "*")
         sql = sprintf("WITH mult_all AS (%s), mult_one AS (%s) %s", base_sql, mult_one, mult_join)
         # WITH mult_all AS (
         #     SELECT x.id AS "x.id", x.a AS "x.a", x.b AS "x.b", x.c AS "x.c", x.row_id AS "x.row_id", i.id AS "i.id", i.a AS "i.a", i.b AS "i.b", i.c AS "i.c", i.row_id AS "i.row_id" 
