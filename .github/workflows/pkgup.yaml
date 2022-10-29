@@ -40,7 +40,6 @@ jobs:
       - name: manual
         if: github.ref == 'refs/heads/ghci'
         run: |
-          ls ${{ env.R_LIBS_USER }}
           cp -R ${{ env.R_LIBS_USER }} library
           R_LIBS_USER="library" R CMD INSTALL $(ls -1t data.table_*.tar.gz | head -n 1) --html
           mkdir -p doc/html
@@ -49,7 +48,7 @@ jobs:
           sed -i "s|file://|../..|g" doc/html/packages.html
           mkdir -p public
           mv doc public/doc
-          cp -r --parents library/*/{html,help,doc,DESCRIPTION,README,NEWS,README.md,NEWS.md} public 2>/dev/null || :
+          cp -r --parents library/*/{html,help,doc,demo,DESCRIPTION,README,NEWS,README.md,NEWS.md} public 2>/dev/null || :
           sed -i 's|"/doc/html/|"/data.table/doc/html/|g' public/library/data.table/doc/index.html
           echo '<!DOCTYPE html>\n<html><head><meta http-equiv="refresh" content="0; url=library/data.table/html/00Index.html"><title>HTTP redirect</title></head><body></body></html>' > public/index.html
       - name: repo
