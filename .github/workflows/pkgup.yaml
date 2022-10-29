@@ -22,6 +22,12 @@ jobs:
       - name: setup-os-dependencies
         run: |
           sudo apt-get install -y libcurl4-openssl-dev
+      - name: cache-r-dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.R_LIBS_USER }}/*
+          key: library-cache-${{ github.run_id }}
+          restore-keys: library-cache
       - name: setup-r-dependencies
         run: |
           Rscript -e 'stopifnot(file.copy("DESCRIPTION", file.path(tdir<-tempdir(), "PACKAGES"))); db<-available.packages(paste0("file://", tdir)); install.packages(setdiff(tools::package_dependencies(read.dcf("DESCRIPTION", fields="Package")[[1L]], db, which="most")[[1L]], installed.packages(priority="high")[,"Package"]), INSTALL_opts="--html")'
@@ -34,8 +40,9 @@ jobs:
       - name: manual
         if: github.ref == 'refs/heads/ghci'
         run: |
-          R CMD INSTALL $(ls -1t data.table_*.tar.gz | head -n 1) --html
-          mv /home/runner/work/_temp/Library library
+          ls ${{ env.R_LIBS_USER }}
+          cp -R ${{ env.R_LIBS_USER }} library
+          R_LIBS_USER="library" R CMD INSTALL $(ls -1t data.table_*.tar.gz | head -n 1) --html
           mkdir -p doc/html
           cp /usr/share/R/doc/html/{left.jpg,up.jpg,Rlogo.svg,R.css,index.html} doc/html
           Rscript -e 'utils::make.packages.html("library", docdir="doc")'
