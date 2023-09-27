@@ -987,13 +987,8 @@ void frollprodExact(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool
   }
 }
 
-/* fast rolling median - fast
- sort median: https://arxiv.org/pdf/1406.1717.pdf
- extended for arbitrary nx and for even k
- finding order of blocks of input is made in parallel
- NA handling redirected to algo="exact"
-
- below functions and macros are helpers for sort-median
+/* fast rolling median - fast - helper functions/macros
+ algo="fast" is a novel sort-median algorithm
  names suffixed with "2" are corresponding versions that support even k window size
  */
 #ifdef MIN
@@ -1141,6 +1136,121 @@ static void advance2(int *next, int* m, int* n, int *s, bool even) {
 }
 #define ADVANCE2(j) advance2(&next[(j)*(k+1)], &m[(j)], &n[(j)], &s[(j)], even)
 
+/* fast rolling NA stats - fast
+ * returns total number of NA/NaN in x
+ * updates:
+ *   nc for rolling NA count
+ *   isna for NA mask
+ * isna must be initialized to false
+ * nc doesn't have to be initialized
+ */
+static int frollNAFast(double *x, uint64_t nx, int k, int *nc, bool *isna) {
+  int w = 0; // rolling nc
+  for (int i=0; i<k-1; i++) {
+    if (ISNAN(x[i])) {
+      isna[i] = true;
+      w++;
+    }
+    nc[i] = w;
+  }
+  if (ISNAN(x[k-1])) {
+    isna[k-1] = true;
+    w++;
+  }
+  nc[k-1] = w;
+  int NC = w;
+  for (uint64_t i=k; i<nx; i++) {
+    if (ISNAN(x[i-k]))
+      w--;
+    if (ISNAN(x[i])) {
+      isna[i] = true;
+      w++;
+      NC++;
+    }
+    nc[i] = w;
+  }
+  return NC;
+}
+
+void printdebug(int j, int i, int k, double *x, int *m, int *n, int *s, int tail, bool even) {
+  Rprintf("window for %d element using block", j*k+i);
+  j ? Rprintf("s A=%d B=%d", j-1, j) : Rprintf(" B=%d", j);
+  // x
+  Rprintf("\n  x_A:       [");
+  if (j) for (int ii=0; ii<k; ii++) ii<k-1 ? Rprintf("%.0f, ", x[(j-1)*k+ii]) : Rprintf("%.0f", x[(j-1)*k+ii]);
+  Rprintf("]");
+  Rprintf("\n  x_B:       [");
+  for (int ii=0; ii<k; ii++) ii<k-1 ? Rprintf("%.0f, ", x[j*k+ii]) : Rprintf("%.0f", x[j*k+ii]);
+  Rprintf("]");
+  // L // not sorted
+  Rprintf("\n  L_A:       [");
+  //for (int ii=i+1; ii<k; ii++) Rprintf("%d, ", (j-1)*k+ii);
+  for (int ii=i+1; ii<k; ii++) ii<k-1 ? Rprintf("%.0f, ", x[(j-1)*k+ii]) : Rprintf("%.0f", x[(j-1)*k+ii]);
+  Rprintf("]");
+  Rprintf("\n  L_B:       [");
+  //for (int ii=0; ii<i+1; ii++) Rprintf("%d, ", j*k+ii);
+  for (int ii=0; ii<i+1; ii++) ii<i ? Rprintf("%.0f, ", x[j*k+ii]) : Rprintf("%.0f", x[j*k+ii]);
+  Rprintf("]");
+  // L_A + L_B // not sorted
+  Rprintf("\n  L_A + L_B: [");
+  //for (int ii=i-k+1; ii<i+1; ii++) Rprintf("%d, ", ii);
+  for (int ii=i-k+1; ii<i+1; ii++) ii<i ? Rprintf("%.0f, ", x[j*k+ii]) : Rprintf("%.0f", x[j*k+ii]);
+  Rprintf("]");
+  // s
+  Rprintf("\n  s_A:       %d", j ? s[j-1] : 0);
+  Rprintf("\n  s_B:       %d", s[j]);
+  // m
+  Rprintf("\n  m_A:       ");
+  if (j) {
+    if (m[j-1]==k) Rprintf("END");
+    else Rprintf("%d; x_A[%d] = %.0f", m[j-1], m[j-1], x[(j-1)*k+m[j-1]]);
+  } else {
+    Rprintf("NA");
+  }
+  Rprintf("\n  n_A:       ");
+  if (j && even) {
+    if (n[j-1]==k) Rprintf("END");
+    else Rprintf("%d; x_A[%d] = %.0f", n[j-1], n[j-1], x[(j-1)*k+n[j-1]]);
+  } else {
+    Rprintf("NA");
+  }
+  Rprintf("\n  m_B:       ");
+  if (m[j]==k) Rprintf("END");
+  else Rprintf("%d; x_B[%d] = %.0f", m[j], m[j], x[j*k+m[j]]);
+  Rprintf("\n  n_B:       ");
+  if (even) {
+    if (n[j]==k) Rprintf("END");
+    else Rprintf("%d; x_B[%d] = %.0f", n[j], n[j], x[j*k+n[j]]);
+  } else {
+    Rprintf("NA");
+  }
+  // median
+  if (j) {
+    if (even) {
+      Rprintf("\n  PEEK(A):   %.1f", PEEK(j-1));
+      Rprintf("\n  PEEK2(A):  %.1f", PEEK2(j-1));
+      Rprintf("\n  PEEK(B):   %.1f", PEEK(j));
+      Rprintf("\n  PEEK2(B):  %.1f", PEEK2(j));
+      Rprintf("\n  MED2:      %.1f", MED2(j-1, j));
+      Rprintf("\n  Y[%d]:      %.1f", j*k+i, MED2(j-1, j));
+    } else {
+      Rprintf("\n  Y[%d]:      %.1f", j*k+i, MED(j-1, j));
+    }
+  } else {
+    Rprintf("\n  PEEK(B):   %.1f", PEEK(j));
+    Rprintf("\n  PEEK2(B):  %.1f", PEEK2(j));
+    Rprintf("\n  Y[%d]:      %.1f", j*k+i, even ? (PEEK(j)+PEEK2(j))/2 : PEEK(j));
+  }
+  Rprintf("\n");
+}
+#define DEBUG(j, i) printdebug(j, i, k, x, m, n, s, tail, even);
+
+/* fast rolling median - fast
+ sort median: https://arxiv.org/pdf/1406.1717.pdf
+ extended for arbitrary nx and for even k
+ finding order of blocks of input is made in parallel
+ NA handling redirected to algo="exact"
+ */
 void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool narm, int hasnf, bool verbose) {
   if (verbose)
     snprintf(end(ans->message[0]), 500, _("%s: running for input length %"PRIu64", window %d, hasnf %d, narm %d\n"), "frollmedianFast", (uint64_t)nx, k, hasnf, (int)narm);
@@ -1183,17 +1293,46 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
         break;
       }
     }
-    if (hasna) {
+  }
+  int *nc = NULL; // allocated only for hasna && !narm
+  bool *isna = NULL;
+  double *xx = NULL;
+  if (hasna) {
+    if (narm) {
       if (verbose)
-        snprintf(end(ans->message[0]), 500, _("%s: NAs detected, fall back to frollmedianExact\n"), "frollmedianFast");
+        snprintf(end(ans->message[0]), 500, _("%s: NAs detected and na.rm=TRUE, fall back to frollmedianExact\n"), "frollmedianFast");
       frollmedianExact(x, nx, ans, k, fill, narm, /*hasnf=*/true, verbose);
       return;
+    } else {
+      nc = malloc(nx*sizeof(int)); // rolling count of NAs
+      if (!nc) { // # nocov start
+        ansSetMsg(ans, 3, "%s: Unable to allocate memory for nc", __func__); // raise error
+        free(nc);
+        return;
+      } // # nocov end
+      isna = calloc(nx, sizeof(bool)); // isna mask
+      if (!isna) { // # nocov start
+        ansSetMsg(ans, 3, "%s: Unable to allocate memory for isna", __func__); // raise error
+        free(isna); free(nc);
+        return;
+      } // # nocov end
+      frollNAFast(x, nx, k, nc, isna);
+      xx = malloc(nx*sizeof(double));
+      if (!xx) { // # nocov start
+        ansSetMsg(ans, 3, "%s: Unable to allocate memory for xx", __func__); // raise error
+        free(xx); free(isna); free(nc);
+        return;
+      } // # nocov end
+      for (uint64_t i=0; i<nx; i++)
+        xx[i] = isna[i] ? R_PosInf : x[i];
+      x = xx;
     }
   }
   double tic = 0;
   double *ansv = ans->dbl_v;
   // handling of nx not multiple of k
   int nx_mod_k = nx % k;
+  int orgn=nx;
   if (nx_mod_k) {
     if (verbose)
       snprintf(end(ans->message[0]), 500, _("%s: nx=%"PRIu64" is not multiple of k=%d, padding with %d elements, new nx=%"PRIu64"\n"), "frollmedianFast", nx, k, k-nx_mod_k, nx+(k-nx_mod_k));
@@ -1212,37 +1351,37 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
   int *o = malloc(nx*sizeof(int)); // permutation that sorts input vector x
   if (!o) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for o", __func__); // raise error
-    free(o);
+    free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   int *m = malloc(b*sizeof(int)); // pointer to median candidate in that L, initialized to first large element in L
   if (!m) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for m", __func__); // raise error
-    free(m); free(o);
+    free(m); free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   int *n = malloc(b*sizeof(int)); // pointer to median candidate of a pair mid values in that L for even k, initialized to second large element
   if (!n) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for n", __func__); // raise error
-    free(n); free(m); free(o);
+    free(n); free(m); free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   int *s = malloc(b*sizeof(int)); // counter between 0 and k, number of 'small' elements in list L
   if (!s) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for s", __func__); // raise error
-    free(s); free(n); free(m); free(o);
+    free(s); free(n); free(m); free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   int *prev = malloc(b*(k+1)*sizeof(int)); // pointer to previous element in list L
   if (!prev) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for prev", __func__); // raise error
-    free(prev); free(s); free(n); free(m); free(o);
+    free(prev); free(s); free(n); free(m); free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   int *next = malloc(b*(k+1)*sizeof(int)); // pointer to next element in list L
   if (!next) { // # nocov start
     ansSetMsg(ans, 3, "%s: Unable to allocate memory for next", __func__); // raise error
-    free(next); free(prev); free(s); free(n); free(m); free(o);
+    free(next); free(prev); free(s); free(n); free(m); free(o); free(xx); free(isna); free(nc);
     return;
   } // # nocov end
   if (verbose)
@@ -1262,14 +1401,18 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
     snprintf(end(ans->message[0]), 500, _("%s: finding order for last block %d skipped completely because it had only single element before padding so is already sorted\n"), "frollmedianFast", bb);
   }*/
   // for now no special handling of last group, needs to be handled later on as well
-  #pragma omp parallel for num_threads(getDTthreads(b, false))
-  for (int j=0; j<b; j++)
-    shellsort(&x[j*k], k, &o[j*k]);
+  if (!hasna) {
+    #pragma omp parallel for num_threads(getDTthreads(b, false))
+    for (int j=0; j<b; j++)
+      shellsort(&x[j*k], k, &o[j*k]);
+  } else {
+    #pragma omp parallel for num_threads(getDTthreads(b, false))
+    for (int j=0; j<b; j++)
+      shellsortna(&x[j*k], k, &o[j*k], &isna[j*k]);
+  }
+  free(isna);
   if (verbose)
     snprintf(end(ans->message[0]), 500, _("%s: finding order for %d blocks in parallel took %.3fs\n"), "frollmedianFast", b, omp_get_wtime()-tic);
-  // order could detect NAs and update hasna flag, then the following warning may be reached
-  if (hasna && hasnf==-1)
-    ansSetMsg(ans, 2, "%s: has.nf=FALSE used but non-finite values are present in input, use default has.nf=NA to avoid this warning", __func__);
   // initialize pointer in blocks
   if (verbose)
     tic = omp_get_wtime();
@@ -1284,16 +1427,10 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
   // fill leading partial window
   for (int i=0; i<k-1; i++)
     ansv[i] = fill;
-  // double check NAs were redirected before
-  if (hasna) { // # nocov start
-    ansSetMsg(ans, 3, "%s: internal error, 'hasna' must not be true at this point, unless NA handling has been implemented in frollmedianFast, then this error check should be removed ", __func__); // raise error
-    free(next); free(prev); free(s); free(n); free(m); free(o);
-    return;
-  } // # nocov end
   // main rolling loop - called post processing in the paper
   if (verbose)
     tic = omp_get_wtime();
-  if (!nx_mod_k && !even && /*this one already escaped before*/!hasna) {
+  if (!nx_mod_k && !even && !hasna) {
     if (verbose)
       snprintf(end(ans->message[0]), 500, _("%s: running implementation as described in the paper by Jukka Suomela, for uneven window size, length of input a multiple of window size, no NAs in the input data\n"), "frollmedianFast");
     ansv[k-1] = PEEK(0);
@@ -1330,7 +1467,11 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
       }
     }
   } else {
-    ansv[k-1] = even ? (PEEK(0) + PEEK2(0)) / 2 : PEEK(0);
+    if (hasna && nc[k-1]) {
+      ansv[k-1] = NA_REAL;
+    } else {
+      ansv[k-1] = even ? (PEEK(0) + PEEK2(0)) / 2 : PEEK(0);
+    }
     for (int j=1; j<b; j++) {
       int A = j-1, B = j;
       UNWIND2(B);
@@ -1343,6 +1484,13 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
         return;
       }*/
       for (int i=0; i<k; i++) {
+        if (hasna && nc[j*k+i]) { // narm was escaped before so we can propagate
+          ansv[j*k+i] = NA_REAL;
+          continue;
+        }
+        bool debug = false; //j*k+i==65;
+        if (debug) Rprintf("  # after\t\tA\t\tB\n", m[A], n[A], m[B], n[B]);
+        if (debug) Rprintf("  # init\t\tm=%d, n=%d, s=%d\tm=%d, n=%d, s=%d\n", m[A], n[A], s[A], m[B], n[B], s[B]);
         if (nx_mod_k && j==b-1) {
           if (verbose && i==nx_mod_k)
             snprintf(end(ans->message[0]), 500, _("%s: skip rolling for %d padded elements\n"), "frollmedianFast", k-nx_mod_k);
@@ -1350,7 +1498,9 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
             continue;
         }
         DELETE2(A);
+        if (debug) Rprintf("  # delete\t\tm=%d, n=%d, s=%d\n", m[A], n[A], s[A]);
         UNDELETE2(B);
+        if (debug) Rprintf("  # undelete\t\t\t\tm=%d, n=%d, s=%d\n", m[B], n[B], s[B]);
         /*stopifnot*/ /*if (!(s[A] + s[B] <= h)) {
           snprintf(end(ans->message[3]), 500, _("%s: 's[A] + s[B] <= h' is not true\n"), "frollmedianFast");
           return;
@@ -1372,47 +1522,33 @@ void frollmedianFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, boo
         if (n[B]!=tail && m[B] == n[B]) {
           n[B] = tail;
         }
-        ansv[j*k+i] = even ? MED2(A, B) : MED(A, B);
+        if (debug) Rprintf("  # advance\t\tm=%d, n=%d, s=%d\tm=%d, n=%d, s=%d\n", m[A], n[A], s[A], m[B], n[B], s[B]);
+        if (debug) DEBUG(B, i);
+        if (false && debug) {
+         Rprintf("last value:\nhasna=%d\nnc[j*k+i]=%d\neven=%d\n", hasna, nc[j*k+i], even);
+         Rprintf("\nlast window:\nx:\n");
+         for (int z=-k+1; z<=0; z++) Rprintf("%.0f, ", x[j*k+i-z]);
+         Rprintf("\no:\n");
+         for (int z=-k+1; z<=0; z++) Rprintf("%d, ", o[j*k+i-z]);
+         Rprintf("\n");
+         Rprintf("m[B]=%d\n",m[B]);
+         Rprintf("n[B]=%d\n",n[B]);
+         Rprintf("m[A]=%d\n",m[A]);
+         Rprintf("n[A]=%d\n",n[A]);
+        }
+        if (hasna && nc[j*k+i]) { // narm was escaped before so we can propagate
+          ansv[j*k+i] = NA_REAL;
+        } else {
+          ansv[j*k+i] = even ? MED2(A, B) : MED(A, B);
+        }
       }
     }
   }
+  free(next); free(prev); free(s); free(n); free(m); free(o); free(xx); free(nc);
   if (verbose)
     snprintf(end(ans->message[0]), 500, _("%s: rolling took %.3f\n"), "frollmedianFast", omp_get_wtime()-tic);
 }
 
-/* fast rolling NA stats - fast
- * returns total number of NA/NaN in x
- * updates:
- *   nc for rolling NA count
- *   isna for NA mask
- */
-static int frollNAFast(double *x, uint64_t nx, int k, int *nc, bool *isna) {
-  int w = 0; // rolling nc
-  for (int i=0; i<k-1; i++) {
-    if (ISNAN(x[i])) {
-      isna[i] = true;
-      w++;
-    }
-    nc[i] = w;
-  }
-  if (ISNAN(x[k-1])) {
-    isna[k-1] = true;
-    w++;
-  }
-  nc[k-1] = w;
-  int NC = w;
-  for (uint64_t i=k; i<nx; i++) {
-    if (ISNAN(x[i-k]))
-      w--;
-    if (ISNAN(x[i])) {
-      isna[i] = true;
-      w++;
-      NC++;
-    }
-    nc[i] = w;
-  }
-  return NC;
-}
 /* fast rolling median - exact
  * loop in parallel for each element of x and call quickselect
  */
@@ -1490,5 +1626,10 @@ void frollmedianExact(double *x, uint64_t nx, ans_t *ans, int k, double fill, bo
         }
       }
     }
+    free(isna); free(rollnc);
   }
+  free(xx);
 }
+
+//7001.441, 7001.443, 7001.445, 7001.451, 7001.453, 7001.455
+// MED2 takes an Inf?

@@ -46,20 +46,12 @@ void shellsort(double *x, int n, int *o) {
  *
  * not used anymore as frollmedian algo="exact" switched from shellshort to quickselect
  * could be used when algo="fast" will have NA support
+ *
+ * NAs has to be decoded to Inf inside x
+ * isna mask must be computed
 */
-int shellsortna(double *x, int n, int *o, bool *isna) {
-  for (int i=0; i<n; i++) {
-    o[i] = i;
-    isna[i] = false;
-  }
-  int nc = 0;
-  for (int i=0; i<n; i++) {
-    if (ISNAN(x[i])) {
-      isna[i] = true;
-      x[i] = R_PosInf;
-      nc++;
-    }
-  }
+void shellsortna(double *x, int n, int *o, bool *isna) {
+  for (int i=0; i<n; i++) o[i] = i;
   int gap = 0;
   while (sedgewick1982[gap] > n) gap++;
   for (int h=sedgewick1982[gap]; gap<NGAPS; h=sedgewick1982[++gap]) {
@@ -77,5 +69,43 @@ int shellsortna(double *x, int n, int *o, bool *isna) {
       o[j] = io;
     }
   }
-  return nc;
+}
+
+SEXP shellsortR(SEXP x, SEXP hasna) {
+  if (!isReal(x))
+    error(_("x must be numeric"));
+  if (!isLogical(hasna) || length(hasna)!=1)
+    error(_("has.na must be TRUE, FALSE or NA"));
+  int n = LENGTH(x);
+  SEXP ans = PROTECT(allocVector(INTSXP, n));
+  if (!n) {
+    UNPROTECT(1);
+    return ans;
+  }
+  int *ansp = INTEGER(ans);
+  double *xp = REAL(x);
+  int ihasna = LOGICAL(hasna)[0]==NA_LOGICAL ? 0 : LOGICAL(hasna)[0]==TRUE ? 1 : -1;
+  if (ihasna==-1) {
+    shellsort(xp, n, ansp);
+  } else {
+    bool *isna = malloc(n*sizeof(bool));
+    if (!isna) { // # nocov start
+      free(isna);
+      error("shellsortR: Unable to allocate memory for isna");
+    } // # nocov end
+    for (int i=0; i<n; i++)
+      isna[i] = ISNAN(xp[i]);
+    double *xx = malloc(n*sizeof(double));
+    if (!xx) { // # nocov start
+      free(xx); free(isna);
+      error("shellsortR: Unable to allocate memory for xx");
+    } // # nocov end
+    for (uint64_t i=0; i<n; i++)
+      xx[i] = isna[i] ? R_PosInf : xp[i];
+    shellsortna(xx, n, ansp, isna);
+  }
+  for (int i=0; i<n; i++)
+    ansp[i] = ansp[i]+1;
+  UNPROTECT(1);
+  return ans;
 }
