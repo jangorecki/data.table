@@ -40,7 +40,7 @@
   \item{\dots}{ Extra arguments passed to \code{FUN} in \code{frollapply}. }
 }
 \details{
-  \code{froll*} functions accept vector, list, \code{data.frame} or \code{data.table}. Functions operate on a single vector, when passing a non-atomic input, then function is applied column-by-column, not to a complete set of column at once.
+  \code{froll*} functions accept vector, list, \code{data.frame} or \code{data.table}. Functions operate on a single vector; when passing a non-atomic input, then function is applied column-by-column, not to the complete set of columns at once.
 
   Argument \code{n} allows multiple values to apply rolling function on multiple window sizes. If \code{adaptive=TRUE}, then \code{n} can be a list to specify multiple window sizes for adaptive rolling computation. See \emph{Adaptive rolling functions} section below for details.
 
@@ -78,14 +78,14 @@
   A list except when the input is a \code{vector} and \code{length(n)==1}, in which case a \code{vector} is returned, for convenience. Thus, rolling functions can be used conveniently within \code{data.table} syntax.
 }
 \note{
-  Be aware that rolling functions operates on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour, or a day, then one has to ensure that there are no gaps in input. For details see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
+  Be aware that rolling functions operate on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour, or a day, then one has to ensure that there are no gaps in input. For details see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
 }
 \section{\code{hasNA} argument}{
   \code{hasNA} can be used to speed up processing in cases when it is known if \code{x} contains \code{NA} (or \code{NaN}).
   \itemize{
-    \item Default \code{hasNA=NA} will use faster NA inaware implementation, but when NAs are detected it will re-run NA aware implementation.
+    \item Default \code{hasNA=NA} will use faster NA unaware implementation, but when NAs are detected it will re-run NA aware implementation.
     \item \code{hasNA=TRUE} will use NA aware implementation straightaway.
-    \item \code{hasNA=FALSE} will use faster NA inaware implementation. Then depending on the rolling function it will either:
+    \item \code{hasNA=FALSE} will use faster NA unaware implementation. Then depending on the rolling function it will either:
     \itemize{
       \item (\emph{mean, sum}) detect NAs, raise warning, re-run NA aware.
       \item (\emph{max}) does not detect NAs and may silently produce incorrect answer.
@@ -95,8 +95,8 @@
 }
 \section{Implementation}{
   \itemize{
-    \item \code{algo="fast"} uses \emph{"on-line"} algorithm, and all of \code{NaN, +Inf, -Inf} (Inf is to be changed!!) are treated as \code{NA}. Not all functions have \emph{fast} implementation available. As of now, \emph{max} and \code{adaptive=TRUE} does not have, therefore it will automatically fall back to \emph{exact} implementation. \code{datatable.verbose} option can be used to check that.
-    \item \code{algo="exact"} will make rolling functions to use a more computationally-intensive algorithm. For each observation from the input vector, it will compute a function on a window from scratch (complexity \eqn{O(n^2)}). Depending on the function, this algorithm may suffer less from floating point rounding error (the same consideration applies to base \code{\link[base]{mean}}). The algorithm also handles \code{NaN, +Inf, -Inf} consistently with base R, unless - for some functions (e.g. \emph{max}) - \code{hasNA} is \code{FALSE} but NAs are present. In the case of some functions (like \emph{mean}), it will additionally make an extra pass to perform floating point error correction. Error corrections might not be truly exact on some platforms (like Windows) when using multiple threads.
+    \item \code{algo="fast"} uses an \emph{"on-line"} algorithm, and all of \code{NaN}, \code{+Inf}, \code{-Inf} (Inf is to be changed!!) are treated as \code{NA}. Not all functions have a \emph{fast} implementation available. As of now, \emph{max} and \code{adaptive=TRUE} does not, therefore it will automatically fall back to \emph{exact} implementation. \code{datatable.verbose} option can be used to check that.
+    \item \code{algo="exact"} will make rolling functions to use a more computationally-intensive algorithm. For each observation from the input vector, it will compute a function on a window from scratch (complexity \eqn{O(n^2)}). Depending on the function, this algorithm may suffer less from floating point rounding error (the same consideration applies to base \code{\link[base]{mean}}). The algorithm also handles \code{NaN}, \code{+Inf}, \code{-Inf} consistently with base R, unless - for some functions (e.g. \emph{max}) - \code{hasNA} is \code{FALSE} but NAs are present. In the case of some functions (like \emph{mean}), it will additionally make an extra pass to perform floating point error correction. Error corrections might not be truly exact on some platforms (like Windows) when using multiple threads.
   }
 }
 \section{Adaptive rolling functions}{
