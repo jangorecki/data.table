@@ -405,7 +405,7 @@ void frollsumExact(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool 
   }
 }
 
-inline void windowmax(double *x, uint64_t o, int k, double *w, uint64_t *iw) {
+inline void windowmax(const double * restrict x, uint64_t o, int k, double * restrict w, uint64_t *iw) {
   for (int i=0; i<k-1; i++) {
     //Rprintf("windowmax iteration %d, offset %d, first x val %f, testing x[o+i-k+1] >= w[0]: x[%d-%d+1] >= w[0]: %f >= %f: %d\n", i, o, x[o], i, k, x[o+i-k+1], w[0], x[o+i-k+1] >= w[0]);
     if (x[o+i-k+1] >= w[0]) { // what if that is never satisfied? test!
@@ -414,7 +414,7 @@ inline void windowmax(double *x, uint64_t o, int k, double *w, uint64_t *iw) {
     }
   }
 }
-inline void windowmaxnarm(double *x, uint64_t o, int k, bool narm, int *nc, double *w, uint64_t *iw) {
+static inline void windowmaxnarm(const double * restrict x, uint64_t o, int k, bool narm, int *nc, double * restrict w, uint64_t *iw) {
   for (int i=0; i<k-1; i++) {
     //Rprintf("windowmax iteration %d, offset %d, first x val %f, testing x[o+i-k+1] >= w[0]: x[%d-%d+1] >= w[0]: %f >= %f: %d\n", i, o, x[o], i, k, x[o+i-k+1], w[0], x[o+i-k+1] >= w[0]);
     if (R_FINITE(x[o+i-k+1])) {
