@@ -912,8 +912,9 @@ n = 3
 an = function(n, len) c(seq.int(n), rep(n, len-n))
 test(6006.011, frollmean(x, an(n, length(x)), adaptive=TRUE), c(0.5,0.75,1,1.5,2,2.5))
 test(6006.012, frollmean(x, n, partial=TRUE), c(0.5,0.75,1,1.5,2,2.5))
+test(6006.0129, frollsum(1:2, 3, partial=TRUE), c(1,3))
 ans = frollmean(x, n)
-ans[seq.int(n-1L)] = frollmean(x[seq.int(n-1L)], n, partial=TRUE)
+ans[seq.int(n-1L)] = frollmean(x[seq.int(n-1L)], n, partial=TRUE) ## 6006.0129 addresses length(x)<n
 test(6006.013, ans, c(0.5,0.75,1,1.5,2,2.5))
 test(6006.021, frollmean(x, rev(an(rev(n), length(x))), adaptive=TRUE, align="left"), c(1,1.5,2,2.5,2.75,3))
 test(6006.022, frollmean(x, n, partial=TRUE, align="left"), c(1,1.5,2,2.5,2.75,3))
