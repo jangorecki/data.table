@@ -51,7 +51,7 @@ froll = function(fun, x, n, fill=NA, algo=c("fast", "exact"), align=c("right", "
   leftadaptive = isTRUE(adaptive) && align=="left"
   if (leftadaptive) {
     verbose = getOption("datatable.verbose")
-    rev2 = function(x) if (is.list(x)) sapply(x, rev, simplify=FALSE) else rev(x)
+    rev2 = function(x) if (is.list(x)) lapply(x, rev) else rev(x)
     if (verbose)
       cat("froll: adaptive=TRUE && align='left' pre-processing for align='right'\n")
     x = rev2(x)
