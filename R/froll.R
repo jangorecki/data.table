@@ -80,12 +80,8 @@ frollmax = function(x, n, fill=NA, algo=c("fast", "exact"), align=c("right", "le
 frollapply = function(x, n, FUN, ..., fill=NA, align=c("right", "left", "center"), adaptive=FALSE, partial=FALSE) {
   FUN = match.fun(FUN)
   align = match.arg(align)
-  if (isTRUE(partial)) {
-    if (isTRUE(adaptive))
-      stopf("'partial' argument cannot be used together with 'adaptive'")
-    n = partial2adaptive(x, n, align)
-    adaptive = TRUE
-  }
+  if (isTRUE(partial))
+    stopf("frollapply does not support 'partial' argument yet")
   if (!missing(adaptive))
     stopf("frollapply does not support 'adaptive' argument yet")
   rho = new.env()
