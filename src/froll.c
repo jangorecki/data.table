@@ -541,7 +541,7 @@ void frollmaxFast(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool n
 void frollmaxExact(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool narm, int hasna, bool verbose) {
   if (verbose)
     snprintf(end(ans->message[0]), 500, _("%s: running in parallel for input length %"PRIu64", window %d, hasna %d, narm %d\n"), "frollmaxExact", (uint64_t)nx, k, hasna, (int)narm);
-  for (int i=0; i<Wk-1; i++) {
+  for (int i=0; i<k-1; i++) {
     ans->dbl_v[i] = fill;
   }
   if (narm || hasna==-1) { // ignore NAs as > does not propagate

@@ -905,8 +905,8 @@ test(6000.3362, frollmax(x, n, hasNA=TRUE, na.rm=TRUE, adaptive=TRUE), c(NA,7,2,
 
 ## frollmax non-adaptive
 options(datatable.verbose=TRUE) ## adaptive frollmax no fast algo
-test(6000.4, frollmax(1:4, c(2,2,2,2)), output="frolladaptivefun: algo 0 not implemented, fall back to 1")
-test(6000.4001, frollmax(1:4, c(2,2,2,2), algo="fast"), output="frolladaptivefun: algo 0 not implemented, fall back to 1")
+#test(6000.4, frollmax(1:4, c(2,2,2,2)), output="frolladaptivefun: algo 0 not implemented, fall back to 1") ## implemented
+#test(6000.4001, frollmax(1:4, c(2,2,2,2), algo="fast"), output="frolladaptivefun: algo 0 not implemented, fall back to 1")
 test(6000.4002, frollmax(1:4, c(2,2,2,2), algo="exact"), notOutput="frolladaptivefun: algo 0 not implemented, fall back to 1")
 options(datatable.verbose=FALSE)
 n = 3
