@@ -35,7 +35,7 @@
     It will use multiple cores where available. See Details for more information. }
   \item{align}{ Character, specifying the "alignment" of the rolling window, defaulting to \code{"right"}. \code{"right"} covers preceding rows (the window \emph{ends} on the current value); \code{"left"} covers following rows (the window \emph{starts} on the current value); \code{"center"} is halfway in between (the window is \emph{centered} on the current value, biased towards \code{"left"} when \code{n} is even). }
   \item{na.rm}{ Logical, default \code{FALSE}. Should missing values be removed when calculating window? }
-  \item{has.nf}{ Logical. If it is known that \code{x} contains (or not) non-finite values (\code{NA, NaN, Inf, -Inf}) then setting this to \code{TRUE}/\code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
+  \item{has.nf}{ Logical. If it is known that \code{x} contains (or not) non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}) then setting this to \code{TRUE} or \code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
   \item{adaptive}{ Logical, default \code{FALSE}. Should the rolling function be calculated adaptively? See \emph{Adaptive rolling functions} section below for details. }
   \item{partial}{ Logical, default \code{FALSE}. Should the rolling window size(s) provided in \code{n} be computed also for leading incomplete running window. See \emph{\code{partial} argument} section below for details. }
   \item{FUN}{ The function to be applied to the rolling window in \code{frollapply}; See \emph{frollapply} section below for details. }
@@ -81,7 +81,6 @@
   A list except when the input is a \code{vector} and \code{length(n)==1}, in which case a \code{vector} is returned, for convenience. Thus, rolling functions can be used conveniently within \code{data.table} syntax.
 }
 \note{
-<<<<<<< HEAD
   Be aware that rolling functions operate on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour, or a day, then one has to ensure that there are no gaps in input. For details and upvote see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
 }
 \section{\code{has.nf} argument}{
@@ -178,7 +177,7 @@ ans1 = frollmean(x, n, partial=TRUE)
 an = function(n, len) c(seq.int(n), rep.int(n, len-n))
 ans2 = frollmean(x, an(n, length(x)), adaptive=TRUE)
 all.equal(ans1, ans2)
-# speed upby using partial only for incomplete observations
+# speed up by using partial only for incomplete observations
 ans3 = frollmean(x, n)
 ans3[seq.int(n-1L)] = frollmean(x[seq.int(n-1L)], n, partial=TRUE)
 all.equal(ans1, ans3)
