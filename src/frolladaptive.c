@@ -408,13 +408,9 @@ void frolladaptivemaxExact(double *x, uint64_t nx, ans_t *ans, int *k, double fi
       return;
     }                                                               // # nocov end
     bool truehasna = hasna>0;
-    for (uint64_t i=0; i<nx; i++) { // no openmp as this shuld be very fast
-      if (ISNAN(x[i])) {
-        truehasna = true;
-        isnan[i] = true;
-      } else {
-        isnan[i] = false;
-      }
+    for (uint64_t i=0; i<nx; i++) { // no openmp as this is very fast
+      isnan[i] = ISNAN(x[i]);
+      truehasna |= isnan[i];
     }
     if (!truehasna) { // not found any NAs
       #pragma omp parallel for num_threads(getDTthreads(nx, true))
