@@ -35,7 +35,7 @@
     It will use multiple cores where available. See Details for more information. }
   \item{align}{ Character, specifying the "alignment" of the rolling window, defaulting to \code{"right"}. \code{"right"} covers preceding rows (the window \emph{ends} on the current value); \code{"left"} covers following rows (the window \emph{starts} on the current value); \code{"center"} is halfway in between (the window is \emph{centered} on the current value, biased towards \code{"left"} when \code{n} is even). }
   \item{na.rm}{ Logical, default \code{FALSE}. Should missing values be removed when calculating window? }
-  \item{has.nf}{ Logical. If it is known that \code{x} contains (or not) non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}) then setting this to \code{TRUE} or \code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
+  \item{has.nf}{ Logical. If it is known whether \code{x} contains non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}), then setting this to \code{TRUE} or \code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
   \item{adaptive}{ Logical, default \code{FALSE}. Should the rolling function be calculated adaptively? See \emph{Adaptive rolling functions} section below for details. }
   \item{partial}{ Logical, default \code{FALSE}. Should the rolling window size(s) provided in \code{n} be computed also for leading incomplete running window. See \emph{\code{partial} argument} section below for details. }
   \item{FUN}{ The function to be applied to the rolling window in \code{frollapply}; See \emph{frollapply} section below for details. }
@@ -90,7 +90,7 @@
     \item \code{has.nf=TRUE} uses non-finite aware implementation straightaway.
     \item \code{has.nf=FALSE} uses faster implementation that does not support non-finite values. Then depending on the rolling function it will either:
     \itemize{
-      \item (\emph{mean, sum}) detect non-finite, re-run non-finite aware..
+      \item (\emph{mean, sum}) detect non-finite, re-run non-finite aware.
       \item (\emph{max}) does not detect non-finites and may silently give incorrect answer.
     }
     In general \code{has.nf=FALSE && any(!is.finite(x))} should be considered as undefined behavior. Therefore \code{has.nf=FALSE} should be used with care.
