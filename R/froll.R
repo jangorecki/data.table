@@ -10,8 +10,6 @@
 # frollsum(list(1:4, 2:5), 2:3, partial=FALSE)
 # frollsum(list(1:4, 2:5), 2:3, partial=TRUE)
 partial2adaptive = function(x, n, align) {
-  #print("partial2adaptive n:")
-  #print(n)
   if (align=="center")
     stopf("'partial' cannot be used together with align='center'")
   if (is.list(x) && length(unique(lengths(x)))!=1L)
@@ -23,8 +21,6 @@ partial2adaptive = function(x, n, align) {
   if (verbose)
     cat("partial2adaptive: froll partial=TRUE trimming 'n' and redirecting to adaptive=TRUE\n")
   trimn = function(n, len, align) {
-    #print("trimn n:")
-    #print(n)
     n = min(n, len) ## so frollsum(1:2, 3, partial=TRUE) works
     if (align=="right")
       c(seq.int(n), rep.int(n, len-n))
@@ -39,8 +35,6 @@ partial2adaptive = function(x, n, align) {
 }
 
 froll = function(fun, x, n, fill=NA, algo, align=c("right","left","center"), na.rm=FALSE, has.nf=NA, adaptive=FALSE, partial=FALSE, FUN, rho) {
-  #print("froll n:")
-  #print(n)
   align = match.arg(align)
   if (isTRUE(partial)) {
     if (isTRUE(adaptive))

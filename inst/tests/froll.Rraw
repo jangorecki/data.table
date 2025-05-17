@@ -310,7 +310,7 @@ test(6000.0671, frollmean(c(1:2,NA,4:10), 4), c(rep(NA_real_, 6), 5.5, 6.5, 7.5,
   "frollfunR: 1 column.*1 window.*",
   "frollfunR: 1:",
   "frollmeanFast: running for input length 10, window 4, hasnf 0, narm 0",
-  "frollmeanFast: non-finite values are present in input, skip non-finite inaware attempt and run with extra care for NFs straighaway",
+  "frollmeanFast: non-finite values are present in input, skip non-finite unaware attempt and run with extra care for NFs straighaway",
   "frollfun: processing fun 0 algo 0 took.*",
   "frollfunR: processing.*took.*"
 ))
@@ -319,7 +319,7 @@ test(6000.0672, frollmean(c(1:2,NA,4:10), 4, has.nf=FALSE), c(rep(NA_real_, 6), 
   "frollfunR: 1 column.*1 window.*",
   "frollfunR: 1:",
   "frollmeanFast: running for input length 10, window 4, hasnf -1, narm 0",
-  "frollmeanFast: non-finite values are present in input, skip non-finite inaware attempt and run with extra care for NFs straighaway",
+  "frollmeanFast: non-finite values are present in input, skip non-finite unaware attempt and run with extra care for NFs straighaway",
   "frollfun: processing fun 0 algo 0 took.*",
   "frollfunR: processing.*took.*"
 ), warning="has.nf=FALSE used but non-finite values are present in input, use default has.nf=NA to avoid this warning")
@@ -336,7 +336,7 @@ test(6000.0674, frollmean(c(1:2,NA,4:10), 4, align="center"), c(rep(NA_real_, 4)
   "frollfunR: allocating memory for results 1x1",
   "frollfunR: 1 column.*1 window.*",
   "frollmeanFast: running for input length 10, window 4, hasnf 0, narm 0",
-  "frollmeanFast: non-finite values are present in input, skip non-finite inaware attempt and run with extra care for NFs straighaway",
+  "frollmeanFast: non-finite values are present in input, skip non-finite unaware attempt and run with extra care for NFs straighaway",
   "frollfun: align 0, shift answer by -2",
   "frollfun: processing fun 0 algo 0 took.*",
   "frollfunR: processing.*took.*"
@@ -857,7 +857,7 @@ test(6000.220, frollsum(c(1:2,NA,4:10), rep(4L,10), adaptive=TRUE, algo="exact")
 test(6000.221, frollsum(1:3, 2), c(NA, 3, 5), output="frollsumFast: running for input length")
 test(6000.222, frollsum(1:3, 2, align="left"), c(3, 5, NA), output="frollfun: align")
 test(6000.223, frollsum(c(1,2,NA), 2), c(NA, 3, NA), output="non-finite values are present in input, re-running with extra care for NFs")
-test(6000.224, frollsum(c(NA,2,3), 2), c(NA, NA, 5), output="non-finite values are present in input, skip non-finite inaware attempt and run with extra care for NFs straighaway")
+test(6000.224, frollsum(c(NA,2,3), 2), c(NA, NA, 5), output="non-finite values are present in input, skip non-finite unaware attempt and run with extra care for NFs straighaway")
 test(6000.225, frollsum(1:3, c(2,2,2), adaptive=TRUE), c(NA, 3, 5), output="frolladaptivesumFast: running for input length")
 test(6000.226, frollsum(c(NA,2,3), c(2,2,2), adaptive=TRUE), c(NA, NA, 5), output="non-finite values are present in input, re-running with extra care for NFs")
 options(datatable.verbose=FALSE)

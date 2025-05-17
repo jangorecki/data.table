@@ -5,6 +5,8 @@
 file=R/froll.R,line=40,col=5,[condition_call_linter] Use warning(., call. = FALSE)
 ```
 
+- Rename `has.nf` arg to `all.finite`?
+
 - fix malloc calls
 ```
 bool *isnan = malloc(nx*sizeof(bool)); // isnan lookup - we use it to reduce ISNAN calls in nested loop
