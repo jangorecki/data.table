@@ -240,7 +240,7 @@ void frollmeanExact(double *x, uint64_t nx, ans_t *ans, int k, double fill, bool
         ans->dbl_v[i] = (double) (res + (err / k));             // adjust calculated rollfun with roundoff correction
       } else if (ISNAN((double) w)) {
         if (!narm) {
-          ans->dbl_v[i] = (double) (w / k);                     // NAs should be propagated
+          ans->dbl_v[i] = (double) w;                           // NAs should be propagated
         }
         truehasnf = true;                                       // NAs detected for this window, set flag so rest of windows will not be re-run
       } else {
