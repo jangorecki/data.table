@@ -1,9 +1,4 @@
-
-- fix linter failure
-
-```
-file=R/froll.R,line=40,col=5,[condition_call_linter] Use warning(., call. = FALSE)
-```
+This is the list of follow up issues that may be resolved after all rolling functions PRs will be merged. As of the current moment none of those is a bug fix or essentially necessary but rather good practice changes.
 
 - Rename `has.nf` arg to `all.finite`?
 
