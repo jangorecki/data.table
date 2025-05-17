@@ -25,7 +25,7 @@
 #undef HASNFMSGSKIP
 #define HASNFMSGSKIP                                                                                                                                                            \
 {                                                                                                                                                                               \
-  snprintf(end(ans->message[0]), 500, _("%s: non-finite values are present in input, skip non-finite inaware attempt and run with extra care for NFs straighaway\n"), __func__);\
+  snprintf(end(ans->message[0]), 500, _("%s: non-finite values are present in input, skip non-finite unaware attempt and run with extra care for NFs straighaway\n"), __func__);\
 }
 
 #undef HASNFMSGEXACTPROPAGATED
