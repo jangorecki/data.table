@@ -35,7 +35,7 @@
     It will use multiple cores where available. See Details for more information. }
   \item{align}{ Character, specifying the "alignment" of the rolling window, defaulting to \code{"right"}. \code{"right"} covers preceding rows (the window \emph{ends} on the current value); \code{"left"} covers following rows (the window \emph{starts} on the current value); \code{"center"} is halfway in between (the window is \emph{centered} on the current value, biased towards \code{"left"} when \code{n} is even). }
   \item{na.rm}{ Logical, default \code{FALSE}. Should missing values be removed when calculating window? }
-  \item{has.nf}{ Logical. If it is known that \code{x} contains (or not) non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}) then setting this to \code{TRUE} or \code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
+  \item{has.nf}{ Logical. If it is known whether \code{x} contains non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}), then setting this to \code{TRUE} or \code{FALSE} may speed up computation. Defaults to \code{NA}. See \emph{has.nf argument} section below for details. }
   \item{adaptive}{ Logical, default \code{FALSE}. Should the rolling function be calculated adaptively? See \emph{Adaptive rolling functions} section below for details. }
   \item{partial}{ Logical, default \code{FALSE}. Should the rolling window size(s) provided in \code{n} be computed also for leading incomplete running window. See \emph{\code{partial} argument} section below for details. }
   \item{FUN}{ The function to be applied to the rolling window in \code{frollapply}; See \emph{frollapply} section below for details. }
@@ -82,11 +82,7 @@
   A list except when the input is a \code{vector} and \code{length(n)==1}, in which case a \code{vector} is returned, for convenience. Thus, rolling functions can be used conveniently within \code{data.table} syntax.
 }
 \note{
-<<<<<<< HEAD
-  Be aware that rolling functions operate on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour, or a day, then one has to ensure that there are no gaps in input. For details and upvote see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
-=======
-  Be aware that rolling functions operates on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour, or a day, then one has to use adaptive rolling function or has to ensure that there are no gaps in input. For details see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
->>>>>>> upstream/frollmax8
+  Be aware that rolling functions operate on the physical order of input. If the intent is to roll values in a vector by a logical window, for example an hour or a day, then one has to use an adaptive rolling function or ensure that there are no gaps in the input. For details see \href{https://github.com/Rdatatable/data.table/issues/3241}{issue #3241}.
 }
 \section{\code{has.nf} argument}{
   \code{has.nf} can be used to speed up processing in cases when it is known if \code{x} contains (or not) non-finite values (\code{NA}, \code{NaN}, \code{Inf}, \code{-Inf}).
@@ -95,7 +91,7 @@
     \item \code{has.nf=TRUE} uses non-finite aware implementation straightaway.
     \item \code{has.nf=FALSE} uses faster implementation that does not support non-finite values. Then depending on the rolling function it will either:
     \itemize{
-      \item (\emph{mean, sum}) detect non-finite, re-run non-finite aware..
+      \item (\emph{mean, sum}) detect non-finite, re-run non-finite aware.
       \item (\emph{max}) does not detect non-finites and may silently give incorrect answer.
     }
     In general \code{has.nf=FALSE && any(!is.finite(x))} should be considered as undefined behavior. Therefore \code{has.nf=FALSE} should be used with care.

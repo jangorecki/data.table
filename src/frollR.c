@@ -65,6 +65,14 @@ SEXP coerceK(SEXP obj, bool adaptive) {
         }
       }
     }
+    int nx = length(VECTOR_ELT(ans, 0));
+    for (int i=0; i<length(ans); i++) {
+      int *iik = INTEGER(VECTOR_ELT(ans, i));
+      R_len_t ii = 0;
+      while (ii < nx && iik[ii] > 0) ii++;
+      if (ii != nx)
+        error(_("n must be positive integer values (> 0)"));
+    }
   }
   UNPROTECT(protecti);
   return ans;
