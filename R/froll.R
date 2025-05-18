@@ -74,7 +74,7 @@ frollfun = function(fun, x, n, fill=NA, algo=c("fast","exact"), align=c("right",
   if (!missing(hasNA)) {
     if (!is.na(has.nf))
       stopf("hasNA is deprecated, use has.nf instead")
-    warning("hasNA is deprecated, use has.nf instead")
+    warningf("hasNA is deprecated, use has.nf instead")
     has.nf = hasNA
   } # remove check on next major release
   algo = match.arg(algo)
