@@ -95,6 +95,7 @@ test(6000.019, frollmean(x, TRUE), error="n must be integer")
 test(6000.020, frollmean(x, list(1:10)), error="n must be integer, list is accepted for adaptive TRUE")
 test(6000.021, frollmean(x, list(NA), adaptive=TRUE), error="n must be integer vector or list of integer vectors")
 test(6000.022, frollmean(x, list(c(1:5,1:5), NA), adaptive=TRUE), error="n must be integer vector or list of integer vectors")
+test(6000.0221, frollmean(1:2, list(c(0L, 0L)), adaptive=TRUE), error="n must be positive integer values")
 
 #### various length list vectors
 l = list(1:6/2, 3:10/4)
