@@ -122,8 +122,6 @@ frollmax = function(x, n, fill=NA, algo=c("fast","exact"), align=c("right","left
 }
 
 frollapply = function(x, n, FUN, ..., fill=NA, align=c("right","left","center"), adaptive=FALSE, partial=FALSE, give.names=FALSE) {
-  if (isTRUE(adaptive) && base::getRversion() < "3.4.0") ## support SET_GROWABLE_BIT
-    stopf("frollapply adaptive=TRUE requires at least R 3.4.0"); # nocov
   FUN = match.fun(FUN)
   rho = new.env()
   froll(FUN=FUN, rho=rho, x=x, n=n, fill=fill, align=align, adaptive=adaptive, partial=partial, give.names=give.names)
