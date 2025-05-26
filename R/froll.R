@@ -37,7 +37,7 @@ partial2adaptive = function(x, n, align, adaptive) {
     if (!is.numeric(n))
       stopf("n must be an integer vector or a list of integer vectors")
     if (verbose)
-      cat("partial2adaptive: froll partial=TRUE trimming 'n' and redirecting to adaptive=TRUE\n")
+      catf("partial2adaptive: froll partial=TRUE trimming 'n' and redirecting to adaptive=TRUE\n")
     if (length(n)>1L) {
       lapply(n, len, align, FUN=trimn)
     } else {
@@ -53,7 +53,7 @@ partial2adaptive = function(x, n, align, adaptive) {
     if (length(n[[1L]]) != len)
       stopf("length of vectors in 'x' must match to length of adaptive window in 'n'")
     if (verbose)
-      cat("partial2adaptive: froll adaptive=TRUE and partial=TRUE trimming 'n'\n")
+      catf("partial2adaptive: froll adaptive=TRUE and partial=TRUE trimming 'n'\n")
     lapply(n, align, FUN=trimnadaptive)
   }
 }
@@ -73,7 +73,7 @@ froll = function(fun, x, n, fill=NA, algo, align=c("right","left","center"), na.
     verbose = getOption("datatable.verbose")
     rev2 = function(x) if (is.list(x)) lapply(x, rev) else rev(x)
     if (verbose)
-      cat("froll: adaptive=TRUE && align='left' pre-processing for align='right'\n")
+      catf("froll: adaptive=TRUE && align='left' pre-processing for align='right'\n")
     x = rev2(x)
     n = rev2(n)
     align = "right"
@@ -84,7 +84,7 @@ froll = function(fun, x, n, fill=NA, algo, align=c("right","left","center"), na.
     ans = .Call(CfrollapplyR, FUN, x, n, fill, align, adaptive, rho)
   if (leftadaptive) {
     if (verbose)
-      cat("froll: adaptive=TRUE && align='left' post-processing from align='right'\n")
+      catf("froll: adaptive=TRUE && align='left' post-processing from align='right'\n")
     ans = rev2(ans)
   }
   if (isTRUE(give.names) && is.list(ans)) {
