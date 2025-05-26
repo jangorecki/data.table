@@ -1235,14 +1235,14 @@ arollfun = function(FUN, x, n, na.rm=FALSE, align=c("right","left"), fill=NA, nf
   if (align=="right") {
     for (i in seq_along(x)) {
       if (i >= n[i])
-        ans[i] = f(x[(i-n[i]+1):i], na.rm=na.rm)
+        ans[i] = f(x[(i-n[i]+1L):i], na.rm=na.rm)
       else if (partial)
         ans[i] = f(x[1L:i], na.rm=na.rm)
     }
   } else {
     for (i in seq_along(x)) {
       if (i <= nx-n[i]+1)
-        ans[i] = f(x[i:(i+n[i]-1)], na.rm=na.rm)
+        ans[i] = f(x[i:(i+n[i]-1L)], na.rm=na.rm)
       else if (partial)
         ans[i] = f(x[i:length(x)], na.rm=na.rm)
     }
