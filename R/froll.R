@@ -1,12 +1,12 @@
 # helpers for partial2adaptive
-trimn = function(n, len, align) { ## adaptive=FALSE
+trimn = function(n, len, align) {
   n = min(n, len) ## so frollsum(1:2, 3, partial=TRUE) works
   if (align=="right")
     c(seq.int(n), rep.int(n, len-n))
   else
     c(rep.int(n, len-n), rev(seq.int(n)))
 }
-triman = function(n, align) { ## adaptive=TRUE
+trimnadaptive = function(n, align) {
   if (align=="right")
     pmin(n, seq_along(n))
   else
@@ -48,7 +48,7 @@ partial2adaptive = function(x, n, align, adaptive) {
       stopf("n must be an integer vector or a list of integer vectors")
     if (!is.list(n))
       n = list(n)
-    if (length(unique(lengths(n)))!=1L)
+    if (length(unique(lengths(n))) != 1L)
       stopf("adaptive window provided in 'n' must not to have different lengths")
     if (length(n[[1L]]) != len)
       stopf("length of vectors in 'x' must match to length of adaptive window in 'n'")
